@@ -5,3 +5,5 @@ __pycache__/
 .pytest_cache/
 .scrapy/
 httpcache/
+DOCUMENTO_ENTREGA.md
+DOCUMENTO_ENTREGA.pdf
