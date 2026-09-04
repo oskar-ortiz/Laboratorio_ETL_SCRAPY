@@ -1,7 +1,9 @@
 
-# Proyecto Scrapy `v`
+# Laboratorio ETL con Scrapy y SQLite
 
-Este repositorio contiene un proyecto Scrapy llamado `Scrapy-Herramientas` para extraer datos de sitios web (http://quotes.toscrape.com/) de manera eficiente. Este README describe cómo instalar, configurar, ejecutar y exportar datos del spider.
+Este repositorio contiene ejercicios de Scrapy y un proceso ETL que extrae libros y laptops, limpia los datos y los carga en una base de datos SQLite relacional.
+
+El proceso nuevo se encuentra en el paquete `etl/` y conserva el ejercicio anterior de citas.
 
 ## Requisitos
 
@@ -14,7 +16,7 @@ Este repositorio contiene un proyecto Scrapy llamado `Scrapy-Herramientas` para 
 1. Clonar el repositorio:
 
 ```bash
-git clone https://github.com/
+git clone https://github.com/oskar-ortiz/Laboratorio_ETL_SCRAPY
 cd tu_repositorio
 ```
 
@@ -34,22 +36,53 @@ env\Scripts\activate
 pip install scrapy
 ```
 
+## Ejecución del ETL
+
+Desde la raíz del proyecto, con el entorno virtual activo:
+
+```powershell
+& .\env\Scripts\python.exe -m etl.run
+```
+
+El comando realiza las siguientes etapas:
+
+1. Extrae todos los libros y laptops disponibles mediante Scrapy.
+2. Guarda la extracción intermedia en `etl_output/`.
+3. Limpia precios, calificaciones, disponibilidad, nombres y duplicados.
+4. Crea o actualiza `etl.db` con las tablas relacionales.
+5. Ejecuta las ocho consultas solicitadas y muestra sus resultados.
+
+Para cargar nuevamente los JSON sin hacer peticiones web:
+
+```powershell
+& .\env\Scripts\python.exe -m etl.run --skip-extract
+```
+
+## Modelo de datos
+
+El esquema está en [etl/schema.sql](etl/schema.sql) y contiene:
+
+- `fuentes`: sitios de origen.
+- `productos`: atributos comunes de libros y tecnología.
+- `libros`: disponibilidad, stock, descripción y categoría.
+- `tecnologia`: descripción específica de laptops.
+- `categorias`: categorías normalizadas de libros.
+
+Las consultas del laboratorio están en [etl/queries.sql](etl/queries.sql). La base puede abrirse directamente con DB Browser for SQLite.
+
 ## Estructura del Proyecto
 
 ```
-v/
-├── v/
-│   ├── spiders/
-│   │   └── v_spider.py
-│   ├── __init__.py
-│   ├── items.py
-│   ├── middlewares.py
-│   ├── pipelines.py
-│   └── settings.py
-└── scrapy.cfg
+etl/
+├── database.py
+├── queries.sql
+├── run.py
+├── schema.sql
+├── spiders.py
+└── transform.py
 ```
 
-## Uso del Spider
+## Uso del Spider de citas
 
 1. Ejecutar el spider:
 
@@ -73,5 +106,7 @@ scrapy crawl quotes -o quotes.json
 
 - Asegúrate de que la URL objetivo sea accesible y que el spider esté correctamente configurado.
 - Puedes modificar `settings.py` para ajustar configuraciones como `USER_AGENT`, `ROBOTSTXT_OBEY` o `DOWNLOAD_DELAY`.
+- El ETL usa SQL directo y `sqlite3`, sin ORM.
+- Los precios se almacenan como números, pero no se convierten monedas porque el laboratorio no define una tasa de cambio.
 
 
