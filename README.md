@@ -70,6 +70,19 @@ El esquema está en [etl/schema.sql](etl/schema.sql) y contiene:
 
 Las consultas del laboratorio están en [etl/queries.sql](etl/queries.sql). La base puede abrirse directamente con DB Browser for SQLite.
 
+## Documento de entrega
+
+La explicación completa, el modelo, las consultas y los resultados están disponibles en:
+
+- [Documento fuente](DOCUMENTO_ENTREGA.md)
+- [Documento PDF](DOCUMENTO_ENTREGA.pdf)
+
+Para regenerar el PDF después de actualizar los resultados:
+
+```powershell
+& .\env\Scripts\python.exe -m etl.generate_pdf
+```
+
 ## Estructura del Proyecto
 
 ```
@@ -84,10 +97,10 @@ etl/
 
 ## Uso del Spider de citas
 
-1. Ejecutar el spider:
+1. Desde `quotes_scraper/`, ejecutar el spider:
 
-```bash
-scrapy crawl v_spider
+```powershell
+& ..\env\Scripts\python.exe -m scrapy crawl quotes
 ```
 
 2. Exportar resultados a CSV:
@@ -107,6 +120,7 @@ scrapy crawl quotes -o quotes.json
 - Asegúrate de que la URL objetivo sea accesible y que el spider esté correctamente configurado.
 - Puedes modificar `settings.py` para ajustar configuraciones como `USER_AGENT`, `ROBOTSTXT_OBEY` o `DOWNLOAD_DELAY`.
 - El ETL usa SQL directo y `sqlite3`, sin ORM.
+- Para instalar las dependencias documentadas: `& .\env\Scripts\python.exe -m pip install -r requirements.txt`.
 - Los precios se almacenan como números, pero no se convierten monedas porque el laboratorio no define una tasa de cambio.
 
 

@@ -1,0 +1,2 @@
+Scrapy==2.18.0
+reportlab==5.0.1
