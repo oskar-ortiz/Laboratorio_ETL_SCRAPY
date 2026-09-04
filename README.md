@@ -70,14 +70,9 @@ El esquema está en [etl/schema.sql](etl/schema.sql) y contiene:
 
 Las consultas del laboratorio están en [etl/queries.sql](etl/queries.sql). La base puede abrirse directamente con DB Browser for SQLite.
 
-## Documento de entrega
+## Documento de entrega local
 
-La explicación completa, el modelo, las consultas y los resultados están disponibles en:
-
-- [Documento fuente](DOCUMENTO_ENTREGA.md)
-- [Documento PDF](DOCUMENTO_ENTREGA.pdf)
-
-Para regenerar el PDF después de actualizar los resultados:
+El documento Markdown y el PDF de entrega se conservan únicamente en la carpeta local y no se publican en el repositorio. Para regenerar el PDF después de actualizar los resultados:
 
 ```powershell
 & .\env\Scripts\python.exe -m etl.generate_pdf
