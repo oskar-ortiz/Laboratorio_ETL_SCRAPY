@@ -1,144 +1,188 @@
-# Pipeline Flow - Laboratorio ETL con Scrapy y SQLite
+# Pipeline Flow del ETL de Productos Web
 
-Este documento es adicional al repositorio y no modifica ni reemplaza la documentación existente. Su objetivo es dejar de forma clara y profesional el flujo de datos del proceso ETL actual.
+Este documento complementa la documentación original del repositorio sin modificar ni reemplazar la estructura, archivos ni contenido existentes. Su propósito es dejar un panorama profesional del flujo de datos del proyecto, con una visión técnica, operativa y de trazabilidad del proceso ETL.
 
-## Visión general
+## 1. Visión general
 
-El proyecto combina extracción web con Scrapy, transformación de datos y carga en SQLite. El flujo principal sigue el patrón clásico de ETL:
+El repositorio implementa un pipeline ETL orientado a la extracción de información comercial desde sitios web, transformación de datos para normalización y calidad, y carga final en una base de datos relacional SQLite.
 
-Extract -> Transform -> Load -> Query / Reporting
+El flujo general sigue el patrón clásico de ingeniería de datos:
 
-## Diagrama de flujo de datos (Pipeline Flow)
+Extract → Transform → Load → Query / Reporting
+
+Este enfoque permite:
+
+- obtener datos en bruto desde fuentes externas
+- limpiar y estructurar la información
+- dejarla lista para análisis
+- responder consultas de negocio y generar reportes
+
+## 2. Diagrama de flujo de datos (Pipeline Flow)
 
 ```mermaid
 flowchart LR
-    A[Fuentes web\nSitios de productos] --> B[Scrapy spiders\netl/spiders.py]
-    B --> C[Extracción JSON/CSV\netl_output/]
-    C --> D[etl.run\norquestador del pipeline]
-    D --> E[etl.transform\nLimpieza y normalización]
-    E --> F[etl.database\nCreación / actualización de schema]
+    A[Fuentes externas\nSitios web de productos] --> B[Scrapy spiders\netl/spiders.py]
+    B --> C[Extracción bruta\nJSON / CSV / archivos intermedios]
+    C --> D[etl.run\nOrquestador principal del pipeline]
+    D --> E[etl.transform\nLimpieza, validación y normalización]
+    E --> F[etl.database\nPersistencia y carga a SQLite]
     F --> G[(SQLite\netl.db)]
-    G --> H[etl/schema.sql\nTablas relacionales]
+    G --> H[etl/schema.sql\nModelo relacional]
     G --> I[etl/queries.sql\nConsultas analíticas]
-    I --> J[Resultados / Reportes]
+    I --> J[Resultados / reportes / análisis]
 
-    E --> E1[Validación\nPrecios, nombres, stock, duplicados]
-    E --> E2[Normalización\nCategorías y campos comunes]
+    E --> E1[Validación de precios]
+    E --> E2[Normalización de nombres]
+    E --> E3[Control de stock / disponibilidad]
+    E --> E4[Deduplicación de registros]
     E1 --> F
     E2 --> F
+    E3 --> F
+    E4 --> F
 
-    D -. --skip-extract .-> G
-    C -. reuso offline .-> D
+    D -. "--skip-extract" .-> G
+    C -. "reuso offline / re-ejecución" .-> D
 ```
 
-## Descripción detallada del flujo
+## 3. Descripción del pipeline
 
-### 1) Fuente de datos
+### 3.1. Capa de extracción
 
-El sistema toma información desde sitios web relevantes para productos como:
-- libros
-- laptops / tecnología
+La primera etapa consiste en obtener los datos desde las fuentes externas con Scrapy.
 
-Estos datos son extraídos con Scrapy mediante spiders configurados en `etl/spiders.py`.
+Componentes clave:
 
-### 2) Extracción
+- `etl/spiders.py`: define los spiders encargados de navegar, consultar y extraer contenido web.
+- `etl_output/`: contiene los resultados intermedios de la extracción.
+- `etl.run`: funciona como orquestador del pipeline y coordina la ejecución de cada fase.
 
-La etapa de extracción se coordina desde `etl/run.py`.
+Objetivo:
 
-Responsabilidades:
-- invocar al spider o reutilizar archivos ya descargados
-- guardar resultados intermedios en `etl_output/`
-- preparar el conjunto bruto para la limpieza
+- traer la información cruda sin perder contexto
+- conservar un estado intermedio reutilizable
+- facilitar la ejecución local o con datos ya descargados
 
-Flujo:
-- Scrapy spider -> JSON/CSV -> carpeta de salida
+### 3.2. Capa de transformación
 
-### 3) Transformación
+La segunda etapa limpia y normaliza la data para convertirla en información útil para análisis.
 
-La lógica de limpieza y preparación se encuentra en `etl/transform.py`.
+En esta fase se aplican tareas como:
 
-Incluye tareas como:
 - limpieza de precios
-- normalización de calificaciones
-- validación de disponibilidad
-- estandarización de nombres y categorías
-- deduplicado de registros
-- preparación de campos para el modelo relacional
+- estandarización de nombres y descripciones
+- validación de disponibilidad y stock
+- tratamiento de valores nulos o inconsistentes
+- deduplicación de registros
+- preparación de campos para el esquema relacional
 
-Resultado:
-- datos estandarizados y consistentes
-- estructura lista para cargar en SQLite
+Archivo principal:
 
-### 4) Carga (Load)
+- `etl/transform.py`
 
-La capa de persistencia está en `etl/database.py` junto con el esquema en `etl/schema.sql`.
+La transformación es clave, porque la calidad del dato final depende de la consistencia de esta etapa.
 
-Responsabilidades:
-- crear o actualizar la base de datos `etl.db`
-- crear tablas relacionales
-- insertar registros normalizados
-- mantener relaciones entre entidades:
-  - `fuentes`
-  - `productos`
-  - `libros`
-  - `tecnologia`
-  - `categorias`
+### 3.3. Capa de carga
 
-### 5) Consultas y analítica
+La información ya transformada se incorpora a SQLite usando la lógica de carga del proyecto.
 
-Una vez cargados los datos, las consultas del laboratorio se ejecutan desde `etl/queries.sql`.
+Componentes:
 
-El patrón de uso es:
-- consultar SQLite
-- responder preguntas de negocio / laboratorio
-- generar resultados de análisis
+- `etl/database.py`: lógica para crear, actualizar y poblar la base de datos
+- `etl/schema.sql`: definiciones del modelo relacional
+- `etl.db`: base de datos final donde queda persistida la información
 
-## Flujo de datos en formato texto
+El esquema relacional contempla tablas como:
+
+- `fuentes`: origen de los datos
+- `productos`: entidad base para productos comunes
+- `libros`: información específica del catálogo de libros
+- `tecnologia`: información específica de laptops y hardware
+- `categorias`: clasificación normalizada de productos
+
+### 3.4. Capa analítica
+
+Una vez cargados los datos, se ejecutan consultas analíticas para responder preguntas del laboratorio y obtener resultados estructurados.
+
+Archivo principal:
+
+- `etl/queries.sql`
+
+Esta capa permite:
+
+- validar calidad de datos
+- responder preguntas de negocio
+- generar análisis de productos, categorías, disponibilidad y relaciones entre entidades
+
+## 4. Flujo de datos en formato lineal
 
 ```text
 [Fuentes web]
       ↓
 [Scrapy spiders]
       ↓
-[Extracción JSON/CSV]
+[Datos extraídos brutos]
       ↓
 [etl.run (orquestador)]
       ↓
 [etl.transform (limpieza + normalización)]
       ↓
-[etl.database + etl.schema.sql]
+[etl.database + schema.sql]
       ↓
 [SQLite: etl.db]
       ↓
 [etl.queries.sql]
       ↓
-[Resultados / Reportes]
+[Resultados analíticos / reportes]
 ```
 
-## Mapeo funcional con archivos del proyecto
+## 5. Mapeo funcional de archivos
 
-| Etapa | Archivo principal | Función |
+| Etapa | Archivo | Rol dentro del pipeline |
 | --- | --- | --- |
-| Extracción | `etl/spiders.py` | Obtiene datos desde sitios web |
-| Orquestación | `etl/run.py` | Ejecuta pipeline completo |
-| Transformación | `etl/transform.py` | Limpia y normaliza registros |
-| Carga | `etl/database.py` | Guarda datos en SQLite |
-| Modelo | `etl/schema.sql` | Define tablas y estructura relacional |
-| Consultas | `etl/queries.sql` | Ejecuta análisis solicitados |
-| Base de datos | `etl.db` | Almacena la información final |
+| Extracción | `etl/spiders.py` | Consulta fuentes web y obtiene registros |
+| Orquestación | `etl/run.py` | Ejecuta la secuencia completa del ETL |
+| Transformación | `etl/transform.py` | Limpia, valida y normaliza los datos |
+| Persistencia | `etl/database.py` | Inserta y actualiza datos en SQLite |
+| Modelo | `etl/schema.sql` | Define tablas y estructura del almacenamiento |
+| Consultas | `etl/queries.sql` | Ejecuta análisis sobre la base de datos |
+| Base de datos | `etl.db` | Almacén final relacional |
+| Salida intermedia | `etl_output/` | Guarda datos extraídos para reutilización |
 
-## Resumen ejecutivo
+## 6. Principios del diseño del pipeline
 
-El pipeline actual se comporta como un ETL profesional con estas capas:
+El flujo actual refleja buenas prácticas básicas de ingeniería de datos:
 
-1. Extracción desde fuentes web con Scrapy.
-2. Persistencia intermedia en archivos JSON/CSV.
-3. Transformación y limpieza de datos.
-4. Carga a SQLite con esquema relacional.
-5. Consulta analítica por medio de SQL.
+- separación clara entre extracción, transformación y carga
+- trazabilidad del dato desde la fuente hasta la base final
+- reutilización de archivos intermedios
+- capacidad de reejecución sin depender siempre de la red
+- esquema relacional para análisis estructurado
+- ejecución controlada desde un punto central: `etl.run`
 
-Este flujo garantiza un proceso reproducible, trazable y adecuado para laboratorio académico o demostración técnica.
+## 7. Calidad y gobernanza de datos
 
-## Nota
+Aunque el proyecto es de carácter académico y operativo, el diseño incorpora varios criterios de calidad:
 
-Este documento es complementario y no reemplaza la documentación principal del repositorio. Se añadió para facilitar la comprensión del pipeline sin alterar la estructura ni contenidos ya existentes.
+- validación de atributos clave
+- limpieza de campos inconsistentes
+- eliminación de duplicados
+- estandarización de nombres, categorías y valores
+- preparación de la información para consultas SQL y análisis posterior
+
+Esto convierte el pipeline en una base sólida para trabajo más avanzado con reporting, BI o modelado analítico.
+
+## 8. Resumen ejecutivo
+
+El proceso del repositorio puede describirse como un ETL profesional ligero con estas características:
+
+1. extracción desde fuentes web usando Scrapy
+2. almacenamiento de datos intermedios en archivos de salida
+3. transformación y limpieza para mejorar consistencia
+4. carga a SQLite con esquema relacional
+5. consulta analítica mediante SQL y generación de resultados
+
+En términos operativos, este flujo es reproducible, comprensible y extensible, y representa una estructura adecuada para proyectos de extracción y análisis de datos en entornos académicos o de laboratorio.
+
+## 9. Nota final
+
+Este documento es adicional y complementario a la documentación principal del repositorio. No reemplaza ni modifica ninguno de los archivos originales, sino que aporta una vista profesional del pipeline para facilitar su entendimiento, mantenimiento y presentación técnica.
