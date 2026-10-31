@@ -58,6 +58,49 @@ Para cargar nuevamente los JSON sin hacer peticiones web:
 & .\env\Scripts\python.exe -m etl.run --skip-extract
 ```
 
+## Architecture & Data Pipeline Topology
+
+```mermaid
+flowchart TD
+    Source[Web Sources / Product Catalogs] -->|HTTP scraping| Spider[Scrapy Spiders
+etl/spiders.py]
+    Spider -->|Raw extraction| Output[etl_output/
+Intermediate JSON / CSV artifacts]
+    Output --> Orchestrator[etl.run
+ETL orchestrator]
+
+    Orchestrator --> Transform[etl.transform
+Cleaning, validation and normalization]
+    Transform --> Validate[Quality Rules
+Price normalization
+Name standardization
+Duplicate removal
+Availability checks]
+    Validate --> Load[etl.database + etl/schema.sql
+SQLite load layer]
+    Load --> DB[(SQLite Database
+etl.db)]
+
+    DB --> Schema[Schema / Relational model]
+    DB --> Queries[etl/queries.sql
+Analytical queries]
+    Queries --> Results[Business insights / report output]
+```
+
+### Topology Notes
+- The process begins with external web extraction through Scrapy, transforming raw HTML content into structured records.
+- The intermediate files stored in `etl_output/` allow reprocessing without repeating the network extraction step.
+- The transformation stage is responsible for standardization, validation and enrichment, ensuring clean records before database load.
+- SQLite acts as the final analytical storage layer, with a relational schema defined in `etl/schema.sql`.
+- Query execution is separated from ingestion, allowing analytical use cases to remain reproducible and maintainable.
+
+### Architecture Summary
+- Extraction: `Scrapy -> etl_output/`
+- Transformation: `etl.transform`
+- Load: `etl.database + schema.sql -> SQLite`
+- Analysis: `etl/queries.sql -> insights/report results`
+- Design principle: clear separation between collection, refinement, and reporting
+
 ## Modelo de datos
 
 El esquema está en [etl/schema.sql](etl/schema.sql) y contiene:
@@ -117,5 +160,3 @@ scrapy crawl quotes -o quotes.json
 - El ETL usa SQL directo y `sqlite3`, sin ORM.
 - Para instalar las dependencias documentadas: `& .\env\Scripts\python.exe -m pip install -r requirements.txt`.
 - Los precios se almacenan como números, pero no se convierten monedas porque el laboratorio no define una tasa de cambio.
-
-
