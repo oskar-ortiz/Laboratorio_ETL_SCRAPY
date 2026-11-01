@@ -5,6 +5,37 @@ Este repositorio contiene ejercicios de Scrapy y un proceso ETL que extrae libro
 
 El proceso nuevo se encuentra en el paquete `etl/` y conserva el ejercicio anterior de citas.
 
+## Portfolio & Author
+
+- Portfolio: https://oskar-ortiz.vercel.app
+- GitHub: https://github.com/oskar-ortiz
+- This project exemplifies a practical data engineering pipeline built around extraction, transformation, governance, and analytical reporting in a local environment.
+
+## Enterprise Architecture Overview
+
+```mermaid
+flowchart TD
+    Source["Web Sources / Product Catalogs"] -->|HTTP scraping| Spider["Scrapy Spiders<br/>etl/spiders.py"]
+    Spider -->|Raw extraction| Output["etl_output/<br/>Intermediate JSON / CSV artifacts"]
+    Output --> Orchestrator["etl.run<br/>ETL orchestrator"]
+
+    Orchestrator --> Transform["etl.transform<br/>Cleaning, validation and normalization"]
+    Transform --> Validate["Quality Rules<br/>Price normalization<br/>Name standardization<br/>Duplicate removal<br/>Availability checks"]
+    Validate --> Load["etl.database + etl/schema.sql<br/>SQLite load layer"]
+    Load --> DB[("SQLite Database<br/>etl.db")]
+
+    DB --> Schema["Schema / Relational model"]
+    DB --> Queries["etl/queries.sql<br/>Analytical queries"]
+    Queries --> Results["Business insights / report output"]
+```
+
+### Design Principles
+- Decouple sourcing, transformation, and reporting into clearly independent stages.
+- Preserve intermediate extraction artifacts for reproducibility and reprocessing.
+- Normalize data before persistence to ensure analytical consistency.
+- Treat SQLite as a durable analytical layer for local reporting and validation.
+- Keep the workflow clear and inspectable for academic and enterprise-style data engineering review.
+
 ## Requisitos
 
 - Python 3.10 o superior
