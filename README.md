@@ -1,40 +1,36 @@
-
 # Laboratorio ETL con Scrapy y SQLite
 
-Este repositorio contiene ejercicios de Scrapy y un proceso ETL que extrae libros y laptops, limpia los datos y los carga en una base de datos SQLite relacional.
+Repositorio de ingeniería de datos orientado a extracción, transformación y carga de información comercial a partir de fuentes web, consolidando un flujo analítico reproducible y fácil de auditar.
 
-El proceso nuevo se encuentra en el paquete `etl/` y conserva el ejercicio anterior de citas.
-
-## Portfolio & Author
+## Autoría y portafolio
 
 - Portfolio: https://oskar-ortiz.vercel.app
 - GitHub: https://github.com/oskar-ortiz
-- This project exemplifies a practical data engineering pipeline built around extraction, transformation, governance, and analytical reporting in a local environment.
 
-## Enterprise Architecture Overview
+## Visión arquitectónica empresarial
 
 ```mermaid
 flowchart TD
-    Source["Web Sources / Product Catalogs"] -->|HTTP scraping| Spider["Scrapy Spiders<br/>etl/spiders.py"]
-    Spider -->|Raw extraction| Output["etl_output/<br/>Intermediate JSON / CSV artifacts"]
-    Output --> Orchestrator["etl.run<br/>ETL orchestrator"]
+    Source["Fuentes web / Catálogos de productos"] -->|Scraping HTTP| Spider["Scrapy Spiders<br/>etl/spiders.py"]
+    Spider -->|Extracción cruda| Output["etl_output/<br/>JSON / CSV intermedios"]
+    Output --> Orchestrator["etl.run<br/>Orquestador ETL"]
 
-    Orchestrator --> Transform["etl.transform<br/>Cleaning, validation and normalization"]
-    Transform --> Validate["Quality Rules<br/>Price normalization<br/>Name standardization<br/>Duplicate removal<br/>Availability checks"]
-    Validate --> Load["etl.database + etl/schema.sql<br/>SQLite load layer"]
-    Load --> DB[("SQLite Database<br/>etl.db")]
+    Orchestrator --> Transform["etl.transform<br/>Limpieza, validación y normalización"]
+    Transform --> Validate["Reglas de calidad<br/>Normalización de precios<br/>Estandarización de nombres<br/>Eliminación de duplicados<br/>Validación de disponibilidad"]
+    Validate --> Load["etl.database + etl/schema.sql<br/>Capa de carga SQLite"]
+    Load --> DB[("Base de datos SQLite<br/>etl.db")]
 
-    DB --> Schema["Schema / Relational model"]
-    DB --> Queries["etl/queries.sql<br/>Analytical queries"]
-    Queries --> Results["Business insights / report output"]
+    DB --> Schema["Esquema relacional"]
+    DB --> Queries["etl/queries.sql<br/>Consultas analíticas"]
+    Queries --> Results["Insights de negocio / resultados analíticos"]
 ```
 
-### Design Principles
-- Decouple sourcing, transformation, and reporting into clearly independent stages.
-- Preserve intermediate extraction artifacts for reproducibility and reprocessing.
-- Normalize data before persistence to ensure analytical consistency.
-- Treat SQLite as a durable analytical layer for local reporting and validation.
-- Keep the workflow clear and inspectable for academic and enterprise-style data engineering review.
+### Principios de diseño
+- Separar claramente las fases de extracción, transformación y analítica.
+- Preservar artefactos intermedios para permitir reprocesamiento y reproducibilidad.
+- Normalizar los datos antes de persistirlos para mantener consistencia analítica.
+- Tratar SQLite como capa analítica local y duradera para reporting y validación.
+- Mantener un flujo claro y auditable para revisión técnica y académica.
 
 ## Requisitos
 
@@ -42,7 +38,7 @@ flowchart TD
 - pip
 - Virtualenv (opcional pero recomendado)
 
-## Instalación y Configuración
+## Instalación y configuración
 
 1. Clonar el repositorio:
 
@@ -89,49 +85,6 @@ Para cargar nuevamente los JSON sin hacer peticiones web:
 & .\env\Scripts\python.exe -m etl.run --skip-extract
 ```
 
-## Architecture & Data Pipeline Topology
-
-```mermaid
-flowchart TD
-    Source[Web Sources / Product Catalogs] -->|HTTP scraping| Spider[Scrapy Spiders
-etl/spiders.py]
-    Spider -->|Raw extraction| Output[etl_output/
-Intermediate JSON / CSV artifacts]
-    Output --> Orchestrator[etl.run
-ETL orchestrator]
-
-    Orchestrator --> Transform[etl.transform
-Cleaning, validation and normalization]
-    Transform --> Validate[Quality Rules
-Price normalization
-Name standardization
-Duplicate removal
-Availability checks]
-    Validate --> Load[etl.database + etl/schema.sql
-SQLite load layer]
-    Load --> DB[(SQLite Database
-etl.db)]
-
-    DB --> Schema[Schema / Relational model]
-    DB --> Queries[etl/queries.sql
-Analytical queries]
-    Queries --> Results[Business insights / report output]
-```
-
-### Topology Notes
-- The process begins with external web extraction through Scrapy, transforming raw HTML content into structured records.
-- The intermediate files stored in `etl_output/` allow reprocessing without repeating the network extraction step.
-- The transformation stage is responsible for standardization, validation and enrichment, ensuring clean records before database load.
-- SQLite acts as the final analytical storage layer, with a relational schema defined in `etl/schema.sql`.
-- Query execution is separated from ingestion, allowing analytical use cases to remain reproducible and maintainable.
-
-### Architecture Summary
-- Extraction: `Scrapy -> etl_output/`
-- Transformation: `etl.transform`
-- Load: `etl.database + schema.sql -> SQLite`
-- Analysis: `etl/queries.sql -> insights/report results`
-- Design principle: clear separation between collection, refinement, and reporting
-
 ## Modelo de datos
 
 El esquema está en [etl/schema.sql](etl/schema.sql) y contiene:
@@ -152,7 +105,7 @@ El documento Markdown y el PDF de entrega se conservan únicamente en la carpeta
 & .\env\Scripts\python.exe -m etl.generate_pdf
 ```
 
-## Estructura del Proyecto
+## Estructura del proyecto
 
 ```
 etl/
@@ -164,7 +117,7 @@ etl/
 └── transform.py
 ```
 
-## Uso del Spider de citas
+## Uso del spider de citas
 
 1. Desde `quotes_scraper/`, ejecutar el spider:
 
